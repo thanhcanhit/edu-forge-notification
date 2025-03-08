@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum NotificationType {
+  DISCUSSION
+  PAYMENT
+  AUTHENTICATION
+  SYSTEM
+}
+
+model Notification {
+  id         String             @id @default(uuid()) @map("_id")
+  type       NotificationType   @map("type")
+  title      String            @map("title")
+  content    String            @map("content")
+  link       String?           @map("link")
+  image      String?           @map("image")
+  metadata   Json?             @map("metadata")
+  isGlobal   Boolean           @default(false) @map("is_global")
+  priority   Int               @default(0) @map("priority")
+  validUntil DateTime?         @map("valid_until")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+  recipients UserNotification[]
+
+  @@map("notifications")
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+  ARCHIVED
+  DELETED
+}
+
+enum NotificationAction {
+  LIKE
+  COMMENT
+  SHARE
+  FRIEND_REQUEST
+  GROUP_INVITE
+  MENTION
+  SYSTEM
+}
+
+model UserNotification {
+  id             String              @id @default(uuid()) @map("_id")
+  userId         String              @map("user_id")
+  notificationId String              @map("notification_id")
+  status         NotificationStatus  @default(UNREAD) @map("status")
+  isHidden       Boolean             @default(false) @map("is_hidden")
+  isFavorite     Boolean             @default(false) @map("is_favorite")
+  actionTaken    Boolean             @default(false) @map("action_taken")
+  sentAt         DateTime            @default(now()) @map("sent_at")
+  readAt         DateTime?           @map("read_at")
+  archivedAt     DateTime?           @map("archived_at")
+  channel        NotificationChannel @default(IN_APP) @map("channel")
+  notification   Notification        @relation(fields: [notificationId], references: [id])
+
+  @@index([userId, status])
+  @@index([userId, sentAt])
+  @@map("user_notifications")
+}
+
+model UserPreference {
+  id        String                @id @default(uuid()) @map("_id")
+  userId    String                @map("user_id")
+  type      String                @map("type")
+  channel   NotificationChannel[] @map("channel")
+  enabled   Boolean               @default(true) @map("enabled")
+  muteUntil DateTime?             @map("mute_until")
+
+  @@unique([userId, type])
+  @@map("user_preferences")
+}
+
+enum NotificationChannel {
+  EMAIL
+  IN_APP
+  PUSH
+}
