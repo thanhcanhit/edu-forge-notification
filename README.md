@@ -70,6 +70,31 @@ $ mau deploy
 
 With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
 
+## API Testing with Postman
+
+A Postman collection is included to help you test the API endpoints. You can find it in the `postman` directory.
+
+To use the collection:
+
+1. Install Postman: [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
+2. Import the collection:
+   - Open Postman
+   - Click on "Import" button
+   - Select the file `postman/edu-forge-notification.postman_collection.json`
+
+Alternatively, if you have the Postman CLI installed, run:
+
+```bash
+$ npm run postman
+```
+
+The collection includes test endpoints for:
+- Notifications (CRUD operations)
+- User Notifications (status management)
+- User Preferences (preference management)
+
+Remember to start your server before testing the endpoints.
+
 ## Resources
 
 Check out a few resources that may come in handy when working with NestJS:

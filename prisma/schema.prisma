@@ -75,3 +75,13 @@ enum NotificationChannel {
   IN_APP
   PUSH
 }
+
+enum NotificationAction {
+  LIKE
+  COMMENT
+  SHARE
+  FRIEND_REQUEST
+  GROUP_INVITE
+  MENTION
+  SYSTEM
+}
