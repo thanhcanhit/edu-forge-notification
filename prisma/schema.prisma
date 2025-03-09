@@ -39,16 +39,6 @@ enum NotificationStatus {
   DELETED
 }
 
-enum NotificationAction {
-  LIKE
-  COMMENT
-  SHARE
-  FRIEND_REQUEST
-  GROUP_INVITE
-  MENTION
-  SYSTEM
-}
-
 model UserNotification {
   id             String              @id @default(uuid()) @map("_id")
   userId         String              @map("user_id")
