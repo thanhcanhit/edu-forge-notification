@@ -101,11 +101,11 @@ async function seed() {
 
   // Create sample users (we'll use IDs since we don't have an actual User model)
   const userIds = [
-    'user-123456', // admin user
-    'user-234567', // regular user 1
-    'user-345678', // regular user 2
-    'user-456789', // new user
-    'user-567890', // inactive user
+    '550e8400-e29b-41d4-a716-446655440000', // admin user
+    '550e8400-e29b-41d4-a716-446655440001', // regular user 1
+    '550e8400-e29b-41d4-a716-446655440002', // regular user 2
+    '550e8400-e29b-41d4-a716-446655440003', // new user
+    '550e8400-e29b-41d4-a716-446655440004', // inactive user
   ];
 
   // Create user notifications

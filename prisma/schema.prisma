@@ -15,7 +15,7 @@ enum NotificationType {
 }
 
 model Notification {
-  id         String             @id @default(uuid()) @map("_id")
+  id         String             @id @default(auto()) @map("_id") @db.ObjectId
   type       NotificationType   @map("type")
   title      String             @map("title")
   content    String             @map("content")
@@ -40,9 +40,9 @@ enum NotificationStatus {
 }
 
 model UserNotification {
-  id             String              @id @default(uuid()) @map("_id")
-  userId         String              @map("user_id")
-  notificationId String              @map("notification_id")
+  id             String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String              @map("user_id") @db.String
+  notificationId String              @map("notification_id") @db.ObjectId
   status         NotificationStatus  @default(UNREAD) @map("status")
   isHidden       Boolean             @default(false) @map("is_hidden")
   isFavorite     Boolean             @default(false) @map("is_favorite")
@@ -59,8 +59,8 @@ model UserNotification {
 }
 
 model UserPreference {
-  id        String                @id @default(uuid()) @map("_id")
-  userId    String                @map("user_id")
+  id        String                @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String                @map("user_id") @db.String
   type      String                @map("type")
   channel   NotificationChannel[] @map("channel")
   enabled   Boolean               @default(true) @map("enabled")

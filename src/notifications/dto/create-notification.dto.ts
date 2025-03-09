@@ -6,6 +6,7 @@ import {
   IsInt,
   IsDate,
   IsObject,
+  IsArray,
 } from 'class-validator';
 import { NotificationType } from '@prisma/client';
 import { Type } from 'class-transformer';
@@ -44,4 +45,9 @@ export class CreateNotificationDto {
   @IsOptional()
   @Type(() => Date)
   validUntil?: Date;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  recipients?: string[];
 }

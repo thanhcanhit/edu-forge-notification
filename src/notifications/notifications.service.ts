@@ -12,8 +12,23 @@ export class NotificationsService {
   async create(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
+    const { recipients, ...notificationData } = createNotificationDto;
+
+    // Create notification with recipients relation
     return this.prismaService.notification.create({
-      data: createNotificationDto,
+      data: {
+        ...notificationData,
+        recipients: {
+          create:
+            recipients?.map((userId) => ({
+              userId,
+              status: 'UNREAD',
+            })) || [],
+        },
+      },
+      include: {
+        recipients: true,
+      },
     });
   }
 
@@ -46,7 +61,7 @@ export class NotificationsService {
     const data = await this.prismaService.notification.findMany({
       where,
       skip,
-      take: limit,
+      take: Number(limit),
       orderBy: {
         createdAt: 'desc',
       },
@@ -79,10 +94,26 @@ export class NotificationsService {
     // Check if notification exists
     await this.findOne(id);
 
-    // Update notification
+    const { recipients, ...notificationData } = updateNotificationDto;
+
+    // Update notification with recipients relation
     return this.prismaService.notification.update({
       where: { id },
-      data: updateNotificationDto,
+      data: {
+        ...notificationData,
+        ...(recipients && {
+          recipients: {
+            deleteMany: {},
+            create: recipients.map((userId) => ({
+              userId,
+              status: 'UNREAD',
+            })),
+          },
+        }),
+      },
+      include: {
+        recipients: true,
+      },
     });
   }
 
