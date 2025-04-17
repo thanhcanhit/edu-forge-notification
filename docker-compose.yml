@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       target: ${NODE_ENV:-development}
     ports:
-      - '3000:3000'
+      - '3000'
     depends_on:
       - mongodb
     environment:
@@ -31,8 +31,6 @@ services:
     container_name: edu-forge-mongodb
     image: mongo:latest
     command: ["--replSet", "rs0", "--bind_ip_all"]
-    ports:
-      - '27017:27017'
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro

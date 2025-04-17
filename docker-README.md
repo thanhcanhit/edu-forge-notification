@@ -74,6 +74,12 @@ docker-compose logs -f mongodb
 - API: http://localhost:3000/api/v1/notification
 - Swagger UI: http://localhost:3000/api
 
+**Lưu ý:** MongoDB không được export port ra ngoài để đảm bảo tính bảo mật. Nếu bạn cần truy cập trực tiếp vào MongoDB, hãy sử dụng lệnh sau:
+
+```bash
+docker-compose exec mongodb mongosh
+```
+
 ### 5. Dừng dịch vụ
 
 Để dừng tất cả các dịch vụ:
@@ -133,6 +139,8 @@ docker-compose exec mongodb mongosh --eval "rs.initiate({_id: 'rs0', members: [{
 
 ### Kiểm tra kết nối đến MongoDB
 
+Truy cập vào MongoDB shell:
+
 ```bash
 docker-compose exec mongodb mongosh
 ```
@@ -141,4 +149,17 @@ Sau đó kiểm tra trạng thái replica set:
 
 ```
 rs.status()
+```
+
+Hoặc kiểm tra các database hiện có:
+
+```
+show dbs
+```
+
+Để sử dụng database của ứng dụng:
+
+```
+use edu-forge-notification
+show collections
 ```
