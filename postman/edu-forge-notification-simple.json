@@ -1,0 +1,344 @@
+{
+	"info": {
+		"_postman_id": "a5e7b8c9-d0e1-4f23-a456-789b0c1d2e3f",
+		"name": "EduForge Notification Service - Simple",
+		"description": "Collection đơn giản cho service thông báo người dùng EduForge",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Thông báo",
+			"item": [
+				{
+					"name": "Tạo thông báo mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"SYSTEM\",\n  \"title\": \"Thông báo hệ thống\",\n  \"content\": \"Nội dung thông báo\",\n  \"link\": \"/system/maintenance\",\n  \"isGlobal\": false,\n  \"priority\": 1,\n  \"recipients\": [\"user-123\", \"user-456\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"notifications"
+							]
+						},
+						"description": "Tạo một thông báo mới trong hệ thống"
+					},
+					"response": []
+				},
+				{
+					"name": "Tạo thông báo khóa học",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"COURSE_ANNOUNCEMENT\",\n  \"title\": \"Thông báo khóa học mới\",\n  \"content\": \"Nội dung thông báo khóa học\",\n  \"link\": \"/courses/123/announcements\",\n  \"isGlobal\": false,\n  \"priority\": 2,\n  \"metadata\": {\n    \"courseId\": \"course-123\",\n    \"courseName\": \"Lập trình Python cơ bản\",\n    \"instructorName\": \"Nguyễn Văn A\"\n  },\n  \"recipients\": [\"user-123\", \"user-456\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"notifications"
+							]
+						},
+						"description": "Tạo một thông báo khóa học mới"
+					},
+					"response": []
+				},
+				{
+					"name": "Tạo thông báo bài tập",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"ASSIGNMENT\",\n  \"title\": \"Bài tập mới\",\n  \"content\": \"Bạn có bài tập mới cần hoàn thành\",\n  \"link\": \"/courses/123/assignments/456\",\n  \"isGlobal\": false,\n  \"priority\": 2,\n  \"metadata\": {\n    \"courseId\": \"course-123\",\n    \"courseName\": \"Lập trình Python cơ bản\",\n    \"assignmentTitle\": \"Bài tập tuần 3\",\n    \"dueDate\": \"2025-05-01T23:59:59Z\"\n  },\n  \"recipients\": [\"user-123\", \"user-456\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"notifications"
+							]
+						},
+						"description": "Tạo một thông báo bài tập mới"
+					},
+					"response": []
+				},
+				{
+					"name": "Tạo thông báo điểm số",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"GRADE\",\n  \"title\": \"Điểm số mới\",\n  \"content\": \"Bạn đã nhận được điểm cho bài kiểm tra\",\n  \"link\": \"/courses/123/grades\",\n  \"isGlobal\": false,\n  \"priority\": 2,\n  \"metadata\": {\n    \"courseId\": \"course-123\",\n    \"courseName\": \"Lập trình Python cơ bản\",\n    \"assessmentTitle\": \"Bài kiểm tra giữa kỳ\",\n    \"score\": 85,\n    \"maxScore\": 100,\n    \"feedback\": \"Bài làm tốt, cần cải thiện phần thuật toán\"\n  },\n  \"recipients\": [\"user-123\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"notifications"
+							]
+						},
+						"description": "Tạo một thông báo điểm số mới"
+					},
+					"response": []
+				}
+			],
+			"description": "Các API liên quan đến quản lý thông báo"
+		},
+		{
+			"name": "Thông báo người dùng",
+			"item": [
+				{
+					"name": "Lấy danh sách thông báo của người dùng",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/users/:userId/notifications?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"users",
+								":userId",
+								"notifications"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "UNREAD",
+									"disabled": true
+								}
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "user-123"
+								}
+							]
+						},
+						"description": "Lấy danh sách thông báo của người dùng"
+					},
+					"response": []
+				},
+				{
+					"name": "Đánh dấu thông báo đã đọc",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"READ\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/users/:userId/notifications/:notificationId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"users",
+								":userId",
+								"notifications",
+								":notificationId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "user-123"
+								},
+								{
+									"key": "notificationId",
+									"value": "notification-id-here"
+								}
+							]
+						},
+						"description": "Đánh dấu thông báo đã đọc"
+					},
+					"response": []
+				},
+				{
+					"name": "Gửi thông báo qua email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/users/:userId/notifications/:notificationId/email",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"users",
+								":userId",
+								"notifications",
+								":notificationId",
+								"email"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "user-123"
+								},
+								{
+									"key": "notificationId",
+									"value": "notification-id-here"
+								}
+							]
+						},
+						"description": "Gửi thông báo qua email"
+					},
+					"response": []
+				},
+				{
+					"name": "Gửi thông báo hàng loạt qua email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"recipients\": [\n    {\n      \"userId\": \"user-123\",\n      \"email\": \"user1@example.com\"\n    },\n    {\n      \"userId\": \"user-456\",\n      \"email\": \"user2@example.com\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/notification/users/:userId/notifications/bulk-email/:notificationId",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"notification",
+								"users",
+								":userId",
+								"notifications",
+								"bulk-email",
+								":notificationId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "admin"
+								},
+								{
+									"key": "notificationId",
+									"value": "notification-id-here"
+								}
+							]
+						},
+						"description": "Gửi thông báo hàng loạt qua email"
+					},
+					"response": []
+				}
+			],
+			"description": "Các API liên quan đến quản lý thông báo người dùng"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}
