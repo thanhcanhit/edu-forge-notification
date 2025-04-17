@@ -1,0 +1,55 @@
+{
+  "info": {
+    "name": "Email Endpoints",
+    "description": "Các endpoint gửi email thông báo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Gửi thông báo qua email",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/notifications/{{userNotificationId}}/email",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "notifications", "{{userNotificationId}}", "email"]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{userEmail}}\"\n}"
+        },
+        "description": "Gửi một thông báo cụ thể qua email cho người dùng."
+      },
+      "response": []
+    },
+    {
+      "name": "Gửi thông báo hàng loạt qua email",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/notifications/bulk-email/{{notificationId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "notifications", "bulk-email", "{{notificationId}}"]
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"recipients\": [\n    {\n      \"userId\": \"{{userId1}}\",\n      \"email\": \"{{userEmail1}}\"\n    },\n    {\n      \"userId\": \"{{userId2}}\",\n      \"email\": \"{{userEmail2}}\"\n    }\n  ]\n}"
+        },
+        "description": "Gửi một thông báo qua email cho nhiều người dùng cùng lúc."
+      },
+      "response": []
+    }
+  ]
+}

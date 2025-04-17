@@ -2,16 +2,27 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UserNotification, NotificationStatus } from '@prisma/client';
+import {
+  UserNotification,
+  NotificationStatus,
+  NotificationChannel,
+} from '@prisma/client';
 import { UserNotificationQueryDto } from './dto/notification-query.dto';
 import { UpdateUserNotificationDto } from './dto/update-user-notification.dto';
 import { NotificationActionDto } from './dto/notification-action.dto';
+import { NotificationEmailService } from 'src/email/notification-email.service';
 
 @Injectable()
 export class UserNotificationsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly logger = new Logger(UserNotificationsService.name);
+
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly notificationEmailService: NotificationEmailService,
+  ) {}
 
   async findAll(
     userId: string,
@@ -124,7 +135,8 @@ export class UserNotificationsService {
   async performAction(
     userId: string,
     notificationId: string,
-    actionDto: NotificationActionDto,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _actionDto: NotificationActionDto,
   ): Promise<UserNotification> {
     // First verify that the notification exists and belongs to the user
     const userNotification = await this.findOne(userId, notificationId);
@@ -165,5 +177,139 @@ export class UserNotificationsService {
         status: NotificationStatus.DELETED,
       },
     });
+  }
+
+  /**
+   * Gửi thông báo qua email
+   * @param userNotificationId ID của thông báo người dùng
+   * @param userEmail Email của người dùng
+   * @returns Kết quả gửi email
+   */
+  async sendNotificationEmail(userNotificationId: string, userEmail: string) {
+    try {
+      // Lấy thông tin thông báo người dùng
+      const userNotification =
+        await this.prismaService.userNotification.findUnique({
+          where: { id: userNotificationId },
+          include: { notification: true },
+        });
+
+      if (!userNotification) {
+        throw new NotFoundException(
+          `User notification with ID ${userNotificationId} not found`,
+        );
+      }
+
+      // Gửi email
+      const result = await this.notificationEmailService.sendNotificationEmail(
+        userNotification.notification,
+        userEmail,
+      );
+
+      // Cập nhật trạng thái đã gửi email
+      await this.prismaService.userNotification.update({
+        where: { id: userNotificationId },
+        data: { channel: NotificationChannel.EMAIL },
+      });
+
+      return result;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(
+        `Failed to send notification email for user notification ${userNotificationId}: ${errorMessage}`,
+        errorStack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Gửi thông báo qua email cho nhiều người dùng
+   * @param notificationId ID của thông báo
+   * @param userEmails Danh sách email người dùng
+   * @returns Kết quả gửi email
+   */
+  async sendBulkNotificationEmails(
+    notificationId: string,
+    userEmails: { userId: string; email: string }[],
+  ) {
+    try {
+      // Lấy thông tin thông báo
+      const notification = await this.prismaService.notification.findUnique({
+        where: { id: notificationId },
+      });
+
+      if (!notification) {
+        throw new NotFoundException(
+          `Notification with ID ${notificationId} not found`,
+        );
+      }
+
+      // Gửi email cho từng người dùng
+      const results = await Promise.all(
+        userEmails.map(async ({ userId, email }) => {
+          try {
+            // Tìm hoặc tạo thông báo người dùng
+            let userNotification =
+              await this.prismaService.userNotification.findFirst({
+                where: {
+                  userId,
+                  notificationId,
+                },
+              });
+
+            if (!userNotification) {
+              userNotification =
+                await this.prismaService.userNotification.create({
+                  data: {
+                    userId,
+                    notificationId,
+                    status: NotificationStatus.UNREAD,
+                    channel: NotificationChannel.EMAIL,
+                    sentAt: new Date(),
+                  },
+                });
+            }
+
+            // Gửi email
+            const result =
+              await this.notificationEmailService.sendNotificationEmail(
+                notification,
+                email,
+              );
+
+            // Cập nhật trạng thái đã gửi email
+            await this.prismaService.userNotification.update({
+              where: { id: userNotification.id },
+              data: { channel: NotificationChannel.EMAIL },
+            });
+
+            return { userId, email, success: true, result };
+          } catch (error: unknown) {
+            const errorMessage =
+              error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+            this.logger.error(
+              `Failed to send notification email to ${email}: ${errorMessage}`,
+              errorStack,
+            );
+            return { userId, email, success: false, error: errorMessage };
+          }
+        }),
+      );
+
+      return results;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(
+        `Failed to send bulk notification emails for notification ${notificationId}: ${errorMessage}`,
+        errorStack,
+      );
+      throw error;
+    }
   }
 }

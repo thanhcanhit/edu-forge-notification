@@ -57,18 +57,52 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## Notification Types
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+The notification service supports various notification types for LMS (Learning Management System) applications:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Basic Notification Types
+- **SYSTEM** - System notifications
+- **DISCUSSION** - Discussion and forum notifications
+- **PAYMENT** - Payment and billing notifications
+- **AUTHENTICATION** - Security and authentication notifications
 
-```bash
-$ npm install -g mau
-$ mau deploy
-```
+### LMS-specific Notification Types
+- **COURSE_ANNOUNCEMENT** - Announcements from course instructors
+- **ASSIGNMENT** - Assignment and homework notifications
+- **GRADE** - Grade and assessment notifications
+- **ENROLLMENT** - Course enrollment notifications
+- **CERTIFICATE** - Certificate issuance notifications
+- **LIVE_SESSION** - Live class session notifications
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+For detailed documentation about notification types and their metadata structure, see [Notification Types Documentation (Vietnamese)](docs/notification-types.vi.md).
+
+## Email Integration
+
+The notification service integrates with Resend to send email notifications. This allows notifications to be delivered via email in addition to in-app and push notifications.
+
+Features:
+- Send individual notification emails
+- Send bulk notification emails to multiple recipients
+- Customized email templates based on notification type
+- Support for Vietnamese language in emails
+
+For detailed documentation about email integration, see [Email Integration Documentation (Vietnamese)](docs/email-integration.vi.md).
+
+## Database Setup
+
+The application uses MongoDB with Prisma ORM. To set up the database:
+
+1. Make sure MongoDB is running
+2. Create a `.env` file with your MongoDB connection string:
+   ```
+   DATABASE_URL="mongodb://localhost:27017/edu-forge-notification?replicaSet=rs0"
+   ```
+3. Run Prisma migrations and seed the database:
+   ```bash
+   $ npx prisma db push
+   $ npx prisma db seed
+   ```
 
 ## API Testing with Postman
 
