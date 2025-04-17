@@ -30,12 +30,24 @@ export class NotificationEmailService {
       const templateData = this.createTemplateData(notification);
       const subject = this.createSubject(notification);
 
-      return await this.emailService.sendTemplateEmail(
+      const result = await this.emailService.sendTemplateEmail(
         userEmail,
         subject,
         'notification',
         templateData,
       );
+
+      if (result.error) {
+        this.logger.warn(
+          `Email sending warning for notification ${notification.id} to ${userEmail}: ${result.error.message}`,
+        );
+      } else {
+        this.logger.log(
+          `Email sent successfully for notification ${notification.id} to ${userEmail}`,
+        );
+      }
+
+      return result;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -44,7 +56,16 @@ export class NotificationEmailService {
         `Failed to send notification email for notification ${notification.id}: ${errorMessage}`,
         errorStack,
       );
-      throw error;
+
+      // Return structured error instead of throwing
+      return {
+        data: null,
+        error: {
+          message: errorMessage,
+          name: error instanceof Error ? error.name : 'unknown_error',
+          statusCode: 500,
+        },
+      };
     }
   }
 

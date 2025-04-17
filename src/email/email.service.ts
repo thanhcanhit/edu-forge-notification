@@ -11,9 +11,9 @@ export class EmailService {
   constructor(private configService: ConfigService) {
     const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
     this.resend = new Resend(resendApiKey);
+    const fromEmailConfig = this.configService.get<string>('FROM_EMAIL');
     this.fromEmail =
-      this.configService.get<string>('FROM_EMAIL') ||
-      'notifications@eduforge.com';
+      fromEmailConfig !== undefined ? fromEmailConfig : 'onboarding@resend.dev';
   }
 
   /**
@@ -26,6 +26,27 @@ export class EmailService {
    */
   async sendEmail(to: string, subject: string, html: string, text?: string) {
     try {
+      // Validate email address format
+      if (!this.isValidEmail(to)) {
+        this.logger.warn(`Invalid email format: ${to}`);
+        return {
+          data: null,
+          error: {
+            message: `Invalid email format: ${to}`,
+            name: 'validation_error',
+            statusCode: 400,
+          },
+        };
+      }
+
+      // For testing purposes, always allow Resend test email
+      if (to !== 'delivered@resend.dev' && !this.isAllowedTestEmail(to)) {
+        this.logger.warn(
+          `Using test email instead of ${to} in development/test environment`,
+        );
+        to = 'delivered@resend.dev';
+      }
+
       const data = await this.resend.emails.send({
         from: this.fromEmail,
         to,
@@ -35,7 +56,7 @@ export class EmailService {
       });
 
       this.logger.log(`Email sent to ${to} with subject "${subject}"`);
-      return data;
+      return { data, error: null };
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -44,7 +65,18 @@ export class EmailService {
         `Failed to send email to ${to}: ${errorMessage}`,
         errorStack,
       );
-      throw error;
+
+      // Return structured error response instead of throwing
+      return {
+        data: null,
+        error: {
+          message: errorMessage,
+          name: error instanceof Error ? error.name : 'unknown_error',
+          statusCode: 500,
+          stack:
+            process.env.NODE_ENV === 'development' ? errorStack : undefined,
+        },
+      };
     }
   }
 
@@ -170,5 +202,39 @@ export class EmailService {
    */
   private stripHtml(html: string): string {
     return html.replace(/<[^>]*>/g, '');
+  }
+
+  /**
+   * Kiểm tra định dạng email có hợp lệ không
+   * @param email Địa chỉ email cần kiểm tra
+   * @returns true nếu email hợp lệ, false nếu không
+   */
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * Kiểm tra xem email có được phép sử dụng trong môi trường test không
+   * @param email Địa chỉ email cần kiểm tra
+   * @returns true nếu email được phép, false nếu không
+   */
+  private isAllowedTestEmail(email: string): boolean {
+    // Trong môi trường production, cho phép tất cả các email
+    if (process.env.NODE_ENV === 'production') {
+      return true;
+    }
+
+    // Danh sách domain được phép trong môi trường test/development
+    const allowedDomains = [
+      'resend.dev',
+      'example.com',
+      'test.com',
+      'eduforge.io.vn',
+      'eduforge.com',
+    ];
+
+    // Kiểm tra xem email có thuộc domain được phép không
+    return allowedDomains.some((domain) => email.endsWith(`@${domain}`));
   }
 }

@@ -195,9 +195,14 @@ export class UserNotificationsService {
         });
 
       if (!userNotification) {
-        throw new NotFoundException(
-          `User notification with ID ${userNotificationId} not found`,
-        );
+        return {
+          data: null,
+          error: {
+            message: `User notification with ID ${userNotificationId} not found`,
+            name: 'not_found',
+            statusCode: 404,
+          },
+        };
       }
 
       // Gửi email
@@ -206,11 +211,14 @@ export class UserNotificationsService {
         userEmail,
       );
 
-      // Cập nhật trạng thái đã gửi email
-      await this.prismaService.userNotification.update({
-        where: { id: userNotificationId },
-        data: { channel: NotificationChannel.EMAIL },
-      });
+      // Nếu gửi email thành công hoặc có cảnh báo nhưng không phải lỗi nghiêm trọng
+      if (!result.error || result.error.statusCode < 500) {
+        // Cập nhật trạng thái đã gửi email
+        await this.prismaService.userNotification.update({
+          where: { id: userNotificationId },
+          data: { channel: NotificationChannel.EMAIL },
+        });
+      }
 
       return result;
     } catch (error: unknown) {
@@ -221,7 +229,16 @@ export class UserNotificationsService {
         `Failed to send notification email for user notification ${userNotificationId}: ${errorMessage}`,
         errorStack,
       );
-      throw error;
+
+      // Trả về lỗi có cấu trúc thay vì throw exception
+      return {
+        data: null,
+        error: {
+          message: errorMessage,
+          name: error instanceof Error ? error.name : 'unknown_error',
+          statusCode: 500,
+        },
+      };
     }
   }
 
@@ -242,9 +259,14 @@ export class UserNotificationsService {
       });
 
       if (!notification) {
-        throw new NotFoundException(
-          `Notification with ID ${notificationId} not found`,
-        );
+        return [
+          {
+            userId: 'admin',
+            email: 'admin@example.com',
+            success: false,
+            error: `Notification with ID ${notificationId} not found`,
+          },
+        ];
       }
 
       // Gửi email cho từng người dùng
@@ -280,13 +302,23 @@ export class UserNotificationsService {
                 email,
               );
 
-            // Cập nhật trạng thái đã gửi email
-            await this.prismaService.userNotification.update({
-              where: { id: userNotification.id },
-              data: { channel: NotificationChannel.EMAIL },
-            });
+            // Nếu gửi email thành công hoặc có cảnh báo nhưng không phải lỗi nghiêm trọng
+            if (!result.error || result.error.statusCode < 500) {
+              // Cập nhật trạng thái đã gửi email
+              await this.prismaService.userNotification.update({
+                where: { id: userNotification.id },
+                data: { channel: NotificationChannel.EMAIL },
+              });
+            }
 
-            return { userId, email, success: true, result };
+            const success = !result.error || result.error.statusCode < 400;
+            return {
+              userId,
+              email,
+              success,
+              result: result.data,
+              error: result.error ? result.error.message : undefined
+            };
           } catch (error: unknown) {
             const errorMessage =
               error instanceof Error ? error.message : 'Unknown error';
@@ -309,7 +341,16 @@ export class UserNotificationsService {
         `Failed to send bulk notification emails for notification ${notificationId}: ${errorMessage}`,
         errorStack,
       );
-      throw error;
+
+      // Trả về kết quả lỗi thay vì throw exception
+      return [
+        {
+          userId: 'system',
+          email: 'system@example.com',
+          success: false,
+          error: errorMessage,
+        },
+      ];
     }
   }
 }
