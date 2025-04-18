@@ -1,57 +1,53 @@
-# Base image
-FROM node:20-alpine AS development
+# Builder stage
+FROM node:20-alpine AS build-stage
 
-# Create app directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Set environment variables
-ENV HUSKY=0
-ENV CI=true
-
-# Copy package files
+# Copy package files and install all dependencies
 COPY package*.json ./
+ENV HUSKY=0
+RUN npm install --ignore-scripts
 
-# Install dependencies
-RUN npm install --no-audit --no-fund
-
-# Copy application source
-COPY . .
-
-# Generate Prisma client
+# Copy Prisma schema and generate client
+COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Build the application
+# Copy all source files
+COPY . .
+
+# Build application
 RUN npm run build
+
+# Generate Prisma client for production
+RUN npm install -D ts-node typescript @types/node && \
+    npx prisma generate
 
 # Production stage
 FROM node:20-alpine AS production
 
-# Set environment variables
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+# Install only necessary packages
+RUN apk add --no-cache postgresql-client && \
+    apk add --no-cache --virtual .build-deps curl && \
+    rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copy only necessary files from build stage
+COPY --from=build-stage /app/dist ./dist
+COPY --from=build-stage /app/package*.json ./
+COPY --from=build-stage /app/prisma ./prisma
+COPY --from=build-stage /app/node_modules/.prisma ./node_modules/.prisma
+
+# Install only production dependencies
 ENV HUSKY=0
-ENV CI=true
+RUN npm install --omit=dev --ignore-scripts && \
+    npm cache clean --force
 
-# Create app directory
-WORKDIR /usr/src/app
 
-# Copy package files
-COPY package*.json ./
+# Expose port and define runtime command
+EXPOSE 3008
 
-# Install production dependencies only
-RUN npm ci --only=production --no-audit --no-fund
+# Set NODE_ENV
+ENV NODE_ENV=production
 
-# Copy Prisma schema
-COPY prisma ./prisma/
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Copy built application from development stage
-COPY --from=development /usr/src/app/dist ./dist
-
-# Expose application port
-EXPOSE 3000
-
-# Start the application
-CMD ["node", "dist/src/main"]
+CMD ["node", "dist/src/main.js"]
