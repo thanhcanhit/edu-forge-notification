@@ -11,12 +11,6 @@ services:
       mongodb:
         condition: service_healthy
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongodb:27017/edu-forge-notification?authSource=admin
-      - PORT=3000
-      - CORS_ORIGIN=*
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - FROM_EMAIL=${FROM_EMAIL:-notifications@eduforge.io.vn}
       - HUSKY=0
       - CI=true
     volumes:
