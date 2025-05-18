@@ -7,13 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ${NODE_ENV:-development}
-    ports:
-      - '3000'
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     environment:
       - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=mongodb://mongodb:27017/edu-forge-notification?replicaSet=rs0
+      - DATABASE_URL=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@edu-forge-mongodb:27017/edu-forge-notification?replicaSet=rs0&authSource=admin
       - PORT=3000
       - CORS_ORIGIN=*
       - RESEND_API_KEY=${RESEND_API_KEY}
@@ -26,11 +25,28 @@ services:
     networks:
       - edu-forge-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   mongodb:
     container_name: edu-forge-mongodb
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--auth"]
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-admin}
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
@@ -43,6 +59,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
 
   mongo-init:
     container_name: edu-forge-mongo-init
@@ -52,10 +76,10 @@ services:
       mongodb:
         condition: service_healthy
     command: >
-      mongosh --host mongodb:27017 --eval "
+      mongosh --host edu-forge-mongodb:27017 -u ${MONGO_USER:-admin} -p ${MONGO_PASSWORD:-admin} --authenticationDatabase admin --eval "
         rs.initiate({
           _id: 'rs0',
-          members: [{ _id: 0, host: 'mongodb:27017' }]
+          members: [{ _id: 0, host: 'edu-forge-mongodb:27017' }]
         });
       "
     networks:
