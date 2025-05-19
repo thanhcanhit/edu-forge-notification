@@ -1,4 +1,3 @@
-# Builder stage
 FROM node:20-alpine AS build-stage
 
 WORKDIR /app
@@ -22,6 +21,21 @@ RUN npm run build
 RUN npm install -D ts-node typescript @types/node && \
     npx prisma generate
 
+# Development stage
+FROM node:20-alpine AS development
+
+WORKDIR /usr/src/app
+
+COPY --from=build-stage /app/package*.json ./
+COPY --from=build-stage /app/dist ./dist
+COPY --from=build-stage /app/prisma ./prisma
+COPY --from=build-stage /app/node_modules ./node_modules
+
+# Expose port
+EXPOSE 3006
+
+CMD ["node", "dist/src/main.js"]
+
 # Production stage
 FROM node:20-alpine AS production
 
@@ -30,7 +44,7 @@ RUN apk add --no-cache postgresql-client && \
     apk add --no-cache --virtual .build-deps curl && \
     rm -rf /var/cache/apk/*
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
 # Copy only necessary files from build stage
 COPY --from=build-stage /app/dist ./dist
@@ -41,11 +55,10 @@ COPY --from=build-stage /app/node_modules/.prisma ./node_modules/.prisma
 # Install only production dependencies
 ENV HUSKY=0
 RUN npm install --omit=dev --ignore-scripts && \
-    npm cache clean --force
+    npm cache clean --force 
 
-
-# Expose port and define runtime command
-EXPOSE 3008
+# Expose port
+EXPOSE 3006
 
 # Set NODE_ENV
 ENV NODE_ENV=production
