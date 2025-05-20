@@ -39,11 +39,11 @@ services:
       - notification-network
     restart: unless-stopped
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh mongodb://localhost:27017/admin --quiet
-      interval: 10s
-      timeout: 5s
+      test: mongosh --eval "db.adminCommand('ping')" mongodb://root:root@mongodb:27017/admin --quiet
+      interval: 30s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
 networks:
   notification-network:
