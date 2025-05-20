@@ -47,7 +47,7 @@ services:
 
 networks:
   notification-network:
-    name: notification-network
+    name: edu-forge-notification-network123
     driver: bridge
 
 volumes:
