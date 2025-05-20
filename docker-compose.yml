@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: ${NODE_ENV:-development}
+      target: production
     depends_on:
       - mongodb
     env_file:

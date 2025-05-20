@@ -18,48 +18,33 @@ COPY . .
 RUN npm run build
 
 # Generate Prisma client for production
-RUN npx prisma generate
-
-# Development stage
-FROM node:20-alpine AS development
-
-WORKDIR /usr/src/app
-
-COPY --from=build-stage /app/package*.json ./
-COPY --from=build-stage /app/dist ./dist
-COPY --from=build-stage /app/prisma ./prisma
-COPY --from=build-stage /app/node_modules ./node_modules
-
-# Install MongoDB tools for mongosh
-RUN apk add --no-cache mongodb-tools
-
-# Expose port
-EXPOSE 3006
-
-CMD ["node", "dist/src/main.js"]
+RUN npm install -D ts-node typescript @types/node && \
+    npx prisma generate
 
 # Production stage
 FROM node:20-alpine AS production
 
 # Install only necessary packages
-RUN apk add --no-cache mongodb-tools && \
+RUN apk add --no-cache postgresql-client && \
     apk add --no-cache --virtual .build-deps curl && \
     rm -rf /var/cache/apk/*
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy only necessary files from build stage
 COPY --from=build-stage /app/dist ./dist
 COPY --from=build-stage /app/package*.json ./
 COPY --from=build-stage /app/prisma ./prisma
-COPY --from=build-stage /app/node_modules ./node_modules
+COPY --from=build-stage /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build-stage /app/node_modules/@prisma ./node_modules/@prisma
 
-# Install only production dependencies
+# Install production dependencies plus ts-node for seeding
 ENV HUSKY=0
 RUN npm install --omit=dev --ignore-scripts && \
-    npm cache clean --force 
+    npm install -D ts-node typescript @types/node && \
+    npm cache clean --force
 
-# Expose port
+# Expose ports for API and Prisma Studio
 EXPOSE 3006
 
 # Set NODE_ENV
