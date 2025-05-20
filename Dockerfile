@@ -52,7 +52,7 @@ WORKDIR /usr/src/app
 COPY --from=build-stage /app/dist ./dist
 COPY --from=build-stage /app/package*.json ./
 COPY --from=build-stage /app/prisma ./prisma
-COPY --from=build-stage /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build-stage /app/node_modules ./node_modules
 
 # Install only production dependencies
 ENV HUSKY=0
