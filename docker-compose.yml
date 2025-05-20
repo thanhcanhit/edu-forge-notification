@@ -12,7 +12,7 @@ services:
     environment:
       - HUSKY=0
       - CI=true
-      - DATABASE_URL=mongodb://root:root@host.docker.internal:27017/notification?authSource=admin
+      - DATABASE_URL=mongodb://root:123456@mongodb:27017/user?authSource=admin
       - NODE_ENV=production
     ports:
       - "3006:3006"
