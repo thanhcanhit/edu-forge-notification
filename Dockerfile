@@ -18,8 +18,7 @@ COPY . .
 RUN npm run build
 
 # Generate Prisma client for production
-RUN npm install -D ts-node typescript @types/node && \
-    npx prisma generate
+RUN npx prisma generate
 
 # Development stage
 FROM node:20-alpine AS development
@@ -31,6 +30,9 @@ COPY --from=build-stage /app/dist ./dist
 COPY --from=build-stage /app/prisma ./prisma
 COPY --from=build-stage /app/node_modules ./node_modules
 
+# Install MongoDB tools for mongosh
+RUN apk add --no-cache mongodb-tools
+
 # Expose port
 EXPOSE 3006
 
@@ -40,7 +42,7 @@ CMD ["node", "dist/src/main.js"]
 FROM node:20-alpine AS production
 
 # Install only necessary packages
-RUN apk add --no-cache postgresql-client && \
+RUN apk add --no-cache mongodb-tools && \
     apk add --no-cache --virtual .build-deps curl && \
     rm -rf /var/cache/apk/*
 
