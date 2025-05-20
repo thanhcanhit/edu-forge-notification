@@ -7,15 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    depends_on:
-      mongodb:
-        condition: service_started
     env_file:
       - .env
     environment:
       - HUSKY=0
       - CI=true
-      - DATABASE_URL=mongodb://root:root@mongodb:27017/notification?authSource=admin
+      - DATABASE_URL=mongodb://root:root@host.docker.internal:27017/notification?authSource=admin
       - NODE_ENV=production
     ports:
       - "3006:3006"
@@ -25,26 +22,7 @@ services:
     networks:
       - notification-network
     restart: unless-stopped
-    command: >
-      sh -c "
-        echo 'Waiting for MongoDB to be ready...' &&
-        sleep 10 &&
-        node dist/src/main.js
-      "
 
-  mongodb:
-    container_name: edu-forge-mongodb-notification
-    image: mongo:5.0
-    command: ["--bind_ip_all"]
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
-      - MONGO_INITDB_DATABASE=notification
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - notification-network
-    restart: unless-stopped
 networks:
   notification-network:
     name: edu-forge-notification-network123
